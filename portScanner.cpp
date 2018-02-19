@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
 	pthread_t threads[argc-3];
 	long i=3;
 	for(i;i<argc;i++){
-		cerr<< "Creating Thread "<< i <<endl;
+		//cerr<< "Creating Thread "<< i <<endl;
 		if((pthread_create(&threads[i-3],NULL,portScanner,(void *)i))!=0){
 			cerr<< "Create Thread Error:" << strerror(errno)<<endl;
 			exit(EXIT_FAILURE);
@@ -52,8 +52,7 @@ void *portScanner(void *threadArgu){
 	in_port_t port=0;	
 	createMap();
 	struct in_addr netaddr;
-	cerr<<scanIPArray[scanIP]<<endl;
-
+	//cerr<<scanIPArray[scanIP]<<endl;
 	struct hostent *destin=gethostbyname(scanIPArray[scanIP]);
 	if(destin==NULL){
 		cerr<< "Fail to Get Destination Addr, Error:"<<strerror(h_errno)<<endl;
@@ -64,7 +63,7 @@ void *portScanner(void *threadArgu){
 	memcpy(&testaddr.sin_addr,destin->h_addr,destin->h_length);
 	port=scanRange[0];
 	for(port;port<=scanRange[1];port++){
-		timeoutTime.tv_sec=10;
+		timeoutTime.tv_sec=10;			//TCP Sending time 10 sec.
 		timeoutTime.tv_usec=0;
 		testaddr.sin_port=htons(port);
 		if((sockfd=socket(AF_INET,SOCK_STREAM,0))<0){
@@ -73,10 +72,10 @@ void *portScanner(void *threadArgu){
 		}
 		setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,(char *)&nonBlock,sizeof(int));
 		setsockopt(sockfd,SOL_SOCKET,SO_SNDTIMEO,(struct timeval *)&timeoutTime,sizeof(struct timeval));
-		cerr<<"Try to Connect"<<endl;
+		//cerr<<"Try to Connect"<<endl;
 		if((connect(sockfd,(struct sockaddr *)&testaddr,(socklen_t)sizeof(testaddr)))<0){
 			if(errno==110){
-				cerr<< "Port "<<port<<" No Response"<<endl;
+				cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" is closed"<<endl;		//Consider ETIMEOUT as Port closed
 				close(sockfd);
 				continue;
 			}
@@ -95,35 +94,35 @@ void *portScanner(void *threadArgu){
 							cerr<<"Get Socket Option Error "<<errno<<strerror(errno)<<endl;
 							exit(EXIT_FAILURE);
 						}
-						cerr<<"SO_ERROR "<<errorReturn<<endl;
-						cerr<< "Port "<<port<<" is open"<<portMap[port]<<endl;
+						cerr<<" "<<scanIPArray[scanIP]<<" SO_ERROR "<<errorReturn<<endl;
+						//cerr<< "Port "<<port<<" is open"<<portMap[port]<<endl;
 						close(sockfd);
 						continue;
 					}
 				}
 				else if(selectReturn==0){
-					cerr<< "Port "<<port<<" No Response"<<endl;
+					cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" is closed"<<endl;
 					close(sockfd);
 					continue;
 				}
 				else{
-					cerr<<"Select Error: "<<errno<<strerror(errno)<<endl;
+					cerr<<" "<<scanIPArray[scanIP]<<" Select Error: "<<errno<<" "<<strerror(errno)<<endl;
 					close(sockfd);
 					continue;
 				}
 			}
 			else if(errno==113){
-				cerr<<"Port "<<port<<" Package Dropped"<<endl;
+				cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" Package Dropped"<<endl;
 				close(sockfd);
 				continue;
 			}
 			else{
-				cerr<< "Fail to Establish Connection, Error:"<<errno<<strerror(errno)<<endl;
+				cerr<<" "<<scanIPArray[scanIP]<<" Fail to Establish Connection, Error:"<<errno<<" "<<strerror(errno)<<endl;
 				close(sockfd);
 				continue;
 			}
 		}
-		cerr<< "Port "<<port<<" is open "<<portMap[port]<<endl;
+		cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" is open "<<portMap[port]<<endl;
 		close(sockfd);
 	}
 }
@@ -156,6 +155,43 @@ void createMap(){
 	portMap[70]="Gopher";
 	portMap[79]="Finger";
 	portMap[80]="HTTP";
+	portMap[81]="Torpark";
+	portMap[88]="Kerberos";
+	portMap[101]="HOSTNAME";
+	portMap[102]="ISO-TSAP";
+	portMap[107]="Remote Telnet Service";
+	portMap[109]="POP";
+	portMap[110]="POP3";
+	portMap[111]="SUNRPC";
+	portMap[113]="ident";
+	portMap[115]="SFTP";
+	portMap[117]="UUCP-PATH";
+	portMap[118]="SQL Service";
+	portMap[119]="NNTP";
+	portMap[135]="EPMAP";
+	portMap[137]="NetBIOS Name Service";
+	portMap[143]="IMAP4";
+	portMap[152]="BFTP";
+	portMap[153]="SGMP";
+	portMap[156]="SQL Service";
+	portMap[158]="DMSP";
+	portMap[161]="SNMP";
+	portMap[170]="Print-srv";
+	portMap[179]="BGP";
+	portMap[194]="IRC";
+	portMap[209]="The Quick Mail Transfer";
+	portMap[213]="IPX";
+	portMap[218]="MPP";
+	portMap[220]="IMAP";
+	portMap[259]="ESRO";
+	portMap[318]="TSP";
+	portMap[323]="IMMP";
+	portMap[427]="SLP";
+	portMap[443]="HTTPS";
+	portMap[444]="SNPP";
+	portMap[513]="Login";
+	portMap[604]="TUNNEL";
+	portMap[631]="IPP";
 }
 	
 	
