@@ -106,7 +106,7 @@ void *portScanner(void *threadArgu){
 					}
 				}
 				else if(selectReturn==0){
-					cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" is closed"<<endl;
+					cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" Package Dropped"<<endl;
 					close(sockfd);
 					continue;
 				}
