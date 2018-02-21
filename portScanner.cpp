@@ -75,7 +75,7 @@ void *portScanner(void *threadArgu){
 		//cerr<<"Try to Connect"<<endl;
 		if((connect(sockfd,(struct sockaddr *)&testaddr,(socklen_t)sizeof(testaddr)))<0){
 			if(errno==110){
-				cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" is dropped"<<endl;		//Consider ETIMEOUT as Port closed
+				cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" Package Dropped"<<endl;		//Consider ETIMEOUT as Port closed
 				close(sockfd);
 				continue;
 			}
