@@ -63,7 +63,7 @@ void *portScanner(void *threadArgu){
 	memcpy(&testaddr.sin_addr,destin->h_addr,destin->h_length);
 	port=scanRange[0];
 	for(port;port<=scanRange[1];port++){
-		timeoutTime.tv_sec=10;			//TCP Sending time 10 sec.
+		timeoutTime.tv_sec=5;			//TCP Sending time 10 sec.
 		timeoutTime.tv_usec=0;
 		testaddr.sin_port=htons(port);
 		if((sockfd=socket(AF_INET,SOCK_STREAM,0))<0){
@@ -75,7 +75,12 @@ void *portScanner(void *threadArgu){
 		//cerr<<"Try to Connect"<<endl;
 		if((connect(sockfd,(struct sockaddr *)&testaddr,(socklen_t)sizeof(testaddr)))<0){
 			if(errno==110){
-				cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" is closed"<<endl;		//Consider ETIMEOUT as Port closed
+				cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" is dropped"<<endl;		//Consider ETIMEOUT as Port closed
+				close(sockfd);
+				continue;
+			}
+			else if(errno==111){
+				cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" is closed"<<endl;
 				close(sockfd);
 				continue;
 			}
