@@ -34,7 +34,6 @@ int main(int argc, char *argv[]){
 	pthread_t threads[argc-3];
 	long i=3;
 	for(i;i<argc;i++){
-		//cerr<< "Creating Thread "<< i <<endl;
 		if((pthread_create(&threads[i-3],NULL,portScanner,(void *)i))!=0){
 			cerr<< "Create Thread Error:" << strerror(errno)<<endl;
 			exit(EXIT_FAILURE);
@@ -46,13 +45,12 @@ void *portScanner(void *threadArgu){
 	int sockfd=0;
 	int nonBlock=1;
 	struct timeval timeoutTime;
-	timeoutTime.tv_sec=10;
+	timeoutTime.tv_sec=1;
 	timeoutTime.tv_usec=0;
 	long scanIP=(long)threadArgu;
 	in_port_t port=0;	
 	createMap();
 	struct in_addr netaddr;
-	//cerr<<scanIPArray[scanIP]<<endl;
 	struct hostent *destin=gethostbyname(scanIPArray[scanIP]);
 	if(destin==NULL){
 		cerr<< "Fail to Get Destination Addr, Error:"<<strerror(h_errno)<<endl;
@@ -63,16 +61,16 @@ void *portScanner(void *threadArgu){
 	memcpy(&testaddr.sin_addr,destin->h_addr,destin->h_length);
 	port=scanRange[0];
 	for(port;port<=scanRange[1];port++){
-		timeoutTime.tv_sec=5;			//TCP Sending time 10 sec.
+		timeoutTime.tv_sec=1;			//TCP Sending time 10 sec.
 		timeoutTime.tv_usec=0;
 		testaddr.sin_port=htons(port);
 		if((sockfd=socket(AF_INET,SOCK_STREAM,0))<0){
 			cerr<< "Fail to Establish A Socket, Error:"<<strerror(errno)<<endl;
 			exit(EXIT_FAILURE);
 		}
-		setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,(char *)&nonBlock,sizeof(int));
 		setsockopt(sockfd,SOL_SOCKET,SO_SNDTIMEO,(struct timeval *)&timeoutTime,sizeof(struct timeval));
-		//cerr<<"Try to Connect"<<endl;
+		timeoutTime.tv_sec=1;
+		setsockopt(sockfd,SOL_SOCKET,SO_RCVTIMEO,(struct timeval *)&timeoutTime,sizeof(struct timeval));	
 		if((connect(sockfd,(struct sockaddr *)&testaddr,(socklen_t)sizeof(testaddr)))<0){
 			if(errno==110){
 				cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" Package Dropped"<<endl;		//Consider ETIMEOUT as Port closed
@@ -99,8 +97,12 @@ void *portScanner(void *threadArgu){
 							cerr<<"Get Socket Option Error "<<errno<<strerror(errno)<<endl;
 							exit(EXIT_FAILURE);
 						}
-						cerr<<" "<<scanIPArray[scanIP]<<" SO_ERROR "<<errorReturn<<endl;
-						//cerr<< "Port "<<port<<" is open"<<portMap[port]<<endl;
+						if(errorReturn==111){
+							cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" is closed"<<endl;
+						}
+						else if(errorReturn==110||errorReturn==113||errorReturn==115){
+							cerr<<" "<<scanIPArray[scanIP]<<" Port "<<port<<" Package Dropped"<<endl;
+						}
 						close(sockfd);
 						continue;
 					}
